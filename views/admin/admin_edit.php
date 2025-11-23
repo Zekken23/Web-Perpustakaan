@@ -1,5 +1,4 @@
 <?php
-// 1. Path Config: Mundur 2 langkah
 require '../../config/database.php';
 
 // Cek Sesi Admin

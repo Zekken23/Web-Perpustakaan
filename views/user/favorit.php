@@ -1,88 +1,145 @@
 <?php
-// views/user/favorit.php
-require_once __DIR__ . '/../../includes/auth.php';
-require_once __DIR__ . '/../../config/database.php';
+// 1. Path Config: Mundur 2 langkah
+require '../../config/database.php';
 
-session_start();
-$user_id = $_SESSION['user_id'] ?? null;
-if (!$user_id) {
-    header('Location: /index.php');
-    exit;
+// 2. Cek Login User
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'user') {
+    header("Location: ../../index.php"); exit;
 }
 
-// ambil daftar favorit user
-$sql = "
-    SELECT f.id as favorit_id, b.id as buku_id, b.judul, b.penulis, b.cover, b.stok
-    FROM favorit f
-    JOIN buku b ON f.buku_id = b.id
-    WHERE f.user_id = :user_id
-    ORDER BY f.created_at DESC
-";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([':user_id' => $user_id]);
-$favorit = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$user_id = $_SESSION['user']['id'];
 
-include __DIR__ . '/../../includes/header.php';
+// --- LOGIC HAPUS DARI FAVORIT ---
+if (isset($_POST['hapus'])) {
+    $id_fav = $_POST['id_fav'];
+    $stmt = $pdo->prepare("DELETE FROM favorit WHERE id = ? AND user_id = ?");
+    $stmt->execute([$id_fav, $user_id]);
+    
+    echo "<script>alert('Buku dihapus dari koleksi favorit!'); window.location='favorit.php';</script>";
+}
+
+// --- LOGIC PINJAM DARI HALAMAN FAVORIT ---
+if (isset($_POST['pinjam'])) {
+    $buku_id = $_POST['buku_id'];
+    $tgl_skrg = date('Y-m-d');
+
+    // Cek Stok
+    $cek = $pdo->prepare("SELECT stok FROM buku WHERE id = ?");
+    $cek->execute([$buku_id]);
+    $stok_buku = $cek->fetchColumn();
+
+    if ($stok_buku > 0) {
+        // Kurangi Stok
+        $pdo->prepare("UPDATE buku SET stok = stok - 1 WHERE id = ?")->execute([$buku_id]);
+        // Insert Peminjaman
+        $stmt = $pdo->prepare("INSERT INTO peminjaman (user_id, buku_id, tanggal_pinjam, status) VALUES (?, ?, ?, 'pending')");
+        $stmt->execute([$user_id, $buku_id, $tgl_skrg]);
+        
+        $sukses = "Berhasil mengajukan peminjaman!";
+    } else {
+        $error = "Stok buku habis!";
+    }
+}
+
+// --- AMBIL DATA FAVORIT (JOIN dengan tabel Buku) ---
+$query = "SELECT f.id as id_fav, b.* FROM favorit f 
+          JOIN buku b ON f.buku_id = b.id 
+          WHERE f.user_id = ? 
+          ORDER BY f.created_at DESC";
+$stmt = $pdo->prepare($query);
+$stmt->execute([$user_id]);
+$favorit = $stmt->fetchAll();
 ?>
 
-<div class="container" style="max-width:1000px;margin:20px auto;">
-    <h2>Favorit Saya</h2>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Koleksi Favorit Saya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/style.css">
+    <style>
+        .card-fav { transition: transform 0.2s; }
+        .card-fav:hover { transform: translateY(-5px); }
+        .img-fav { height: 180px; object-fit: cover; width: 100%; }
+    </style>
+</head>
+<body class="bg-light fade-in">
 
-    <?php if (!empty($_SESSION['flash'])): ?>
-        <?php foreach ($_SESSION['flash'] as $type => $msg): ?>
-            <div class="flash <?php echo htmlspecialchars($type); ?>" style="padding:10px;border-radius:6px;margin-bottom:12px;background:#f0f8ff;">
-                <?php echo htmlspecialchars($msg); ?>
-            </div>
-        <?php endforeach; unset($_SESSION['flash']); ?>
+<div class="container mt-5 mb-5" style="max-width: 1000px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="text-primary fw-bold mb-0">❤️ Koleksi Favorit</h4>
+            <p class="text-muted small mb-0">Simpan buku yang ingin kamu baca nanti</p>
+        </div>
+        <a href="user_dashboard.php" class="btn btn-secondary rounded-pill px-4">
+            &larr; Kembali ke Dashboard
+        </a>
+    </div>
+
+    <?php if(isset($sukses)): ?>
+        <div class="alert alert-success alert-dismissible fade show"><?= $sukses ?> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif; ?>
+    <?php if(isset($error)): ?>
+        <div class="alert alert-danger alert-dismissible fade show"><?= $error ?> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
     <?php endif; ?>
 
-    <?php if (count($favorit) === 0): ?>
-        <p>Belum ada buku di favorit. Jelajahi katalog dan klik ikon hati untuk menyimpan buku.</p>
-    <?php else: ?>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">
+    <?php if (count($favorit) > 0): ?>
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
             <?php foreach ($favorit as $item): ?>
-                <div style="border:1px solid #e7e7e7;border-radius:8px;padding:12px;background:#fff;">
-                    <div style="display:flex;gap:12px;">
-                        <?php if (!empty($item['cover'])): ?>
-                            <img src="/assets/uploads/<?php echo htmlspecialchars($item['cover']); ?>" alt="cover" style="width:72px;height:100px;object-fit:cover;border:1px solid #ddd;">
-                        <?php else: ?>
-                            <div style="width:72px;height:100px;background:#f4f4f4;display:flex;align-items:center;justify-content:center;color:#999;">No</div>
-                        <?php endif; ?>
+            <div class="col">
+                <div class="card card-fav shadow-sm border-0 h-100">
+                    <div class="position-relative">
+                        <img src="../../assets/foto/<?= $item['cover'] ?>" class="img-fav rounded-top" alt="Cover">
+                        <span class="badge bg-primary position-absolute top-0 end-0 m-2"><?= $item['kategori'] ?></span>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title fw-bold text-dark mb-1"><?= htmlspecialchars($item['judul']) ?></h6>
+                        <p class="text-muted small mb-2"><?= htmlspecialchars($item['penulis']) ?></p>
+                        
+                        <div class="mb-3">
+                            <small class="<?= $item['stok'] > 0 ? 'text-success' : 'text-danger' ?> fw-bold">
+                                <?= $item['stok'] > 0 ? '✅ Tersedia: '.$item['stok'] : '❌ Stok Habis' ?>
+                            </small>
+                        </div>
 
-                        <div style="flex:1;">
-                            <div style="font-weight:600;"><?php echo htmlspecialchars($item['judul']); ?></div>
-                            <div style="font-size:13px;color:#666;margin-bottom:8px;"><?php echo htmlspecialchars($item['penulis'] ?? '-'); ?></div>
+                        <div class="mt-auto d-grid gap-2">
+                            <?php if($item['stok'] > 0): ?>
+                            <form method="POST">
+                                <input type="hidden" name="buku_id" value="<?= $item['id'] ?>">
+                                <button type="submit" name="pinjam" class="btn btn-primary btn-sm w-100 rounded-pill" onclick="return confirm('Ajukan peminjaman buku ini?')">
+                                    📖 Pinjam
+                                </button>
+                            </form>
+                            <?php else: ?>
+                                <button class="btn btn-secondary btn-sm rounded-pill" disabled>Stok Habis</button>
+                            <?php endif; ?>
 
-                            <div style="display:flex;gap:8px;align-items:center;">
-                                <a href="/views/user/pinjam_buku.php?id=<?php echo (int)$item['buku_id']; ?>" style="padding:6px 10px;border-radius:6px;border:1px solid #2d9cdb;color:#2d9cdb;text-decoration:none;font-size:14px;">Detail</a>
-
-                                <form method="post" action="/actions/favorit_toggle.php" style="display:inline;">
-                                    <input type="hidden" name="buku_id" value="<?php echo (int)$item['buku_id']; ?>">
-                                    <button type="submit" style="padding:6px 10px;border-radius:6px;border:1px solid #e74c3c;background:#fff;color:#e74c3c;cursor:pointer;">
-                                        Hapus dari Favorit
-                                    </button>
-                                </form>
-
-                                <?php if ((int)$item['stok'] > 0): ?>
-                                    <form method="post" action="/actions/pinjam_create.php" style="display:inline;">
-                                        <input type="hidden" name="buku_id" value="<?php echo (int)$item['buku_id']; ?>">
-                                        <button type="submit" style="padding:6px 10px;border-radius:6px;background:#2d9cdb;color:#fff;border:0;cursor:pointer;">
-                                            Pinjam Buku
-                                        </button>
-                                    </form>
-                                <?php else: ?>
-                                    <button disabled style="padding:6px 10px;border-radius:6px;background:#ccc;color:#fff;border:0;">
-                                        Tidak Tersedia
-                                    </button>
-                                <?php endif; ?>
-
-                            </div>
+                            <form method="POST">
+                                <input type="hidden" name="id_fav" value="<?= $item['id_fav'] ?>">
+                                <button type="submit" name="hapus" class="btn btn-outline-danger btn-sm w-100 rounded-pill" onclick="return confirm('Hapus dari favorit?')">
+                                    🗑️ Hapus
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
+            </div>
             <?php endforeach; ?>
         </div>
+    <?php else: ?>
+        <div class="text-center py-5 bg-white rounded shadow-sm">
+            <h1 class="display-4">💔</h1>
+            <h5 class="text-muted mt-3">Belum ada buku favorit.</h5>
+            <p class="text-secondary">Jelajahi dashboard dan klik tombol simpan untuk menambah koleksi.</p>
+            <a href="user_dashboard.php" class="btn btn-primary mt-2 rounded-pill px-4">Cari Buku Sekarang</a>
+        </div>
     <?php endif; ?>
+
 </div>
 
-<?php include __DIR__ . '/../../includes/footer.php'; ?>
+<script src="../../assets/animate.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
