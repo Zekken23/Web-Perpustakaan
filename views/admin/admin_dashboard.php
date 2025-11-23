@@ -34,6 +34,7 @@ $buku = $stmt->fetchAll();
             <a href="admin_tambah.php" class="btn btn-success btn-custom me-2">+ Tambah</a>
             <a href="admin_pinjam.php" class="btn btn-warning btn-custom me-2">Validasi Pinjam</a>
             <a href="../../logout.php" class="btn btn-outline-danger btn-custom">Logout</a>
+            <a href="admin_pinjam.php" class="btn btn-primary">📋 Kelola Peminjaman</a>
         </div>
     </div>
 
