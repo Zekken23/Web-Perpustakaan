@@ -1,46 +1,36 @@
 <?php
 require '../../config/database.php';
 
-// Cek Session
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     header("Location: ../../index.php"); exit;
 }
 
-// --- 1. LOGIC HAPUS BUKU ---
 if (isset($_GET['hapus'])) {
     $id = $_GET['hapus'];
-    // Hapus gambar lama
     $stmt_img = $pdo->prepare("SELECT cover FROM buku WHERE id = ?");
     $stmt_img->execute([$id]);
     $img = $stmt_img->fetch();
     if($img && $img['cover'] != 'default.jpg' && file_exists("../../assets/foto/".$img['cover'])){
         unlink("../../assets/foto/".$img['cover']);
     }
-    // Hapus data
     $stmt = $pdo->prepare("DELETE FROM buku WHERE id = ?");
     $stmt->execute([$id]);
     header("Location: admin_dashboard.php");
     exit;
 }
 
-// --- 2. LOGIC IMPORT (SEARCH MANUAL & RANDOM) ---
 $import_status = "";
 
-// Cek apakah tombol cari diklik ATAU tombol random diklik
 if ((isset($_GET['keyword_google']) && !empty($_GET['keyword_google'])) || isset($_GET['random_import'])) {
     
-    // Tambah durasi eksekusi maksimum jadi 5 menit
     set_time_limit(300); 
 
-    // TENTUKAN KATA KUNCI
     if (isset($_GET['random_import'])) {
-        // Daftar topik random biar variatif
         $topik_random = [
             'Teknologi', 'Sejarah Indonesia', 'Novel Best Seller', 'Bisnis & Keuangan', 
             'Sains Populer', 'Psikologi', 'Kesehatan', 'Pemrograman', 'Kuliner Nusantara', 
             'Pengembangan Diri', 'Komik', 'Biografi Tokoh', 'Pendidikan'
         ];
-        // Pilih satu secara acak
         $keyword = $topik_random[array_rand($topik_random)];
         $mode_pesan = "Mode Random (Topik: <b>$keyword</b>)";
     } else {
@@ -52,10 +42,9 @@ if ((isset($_GET['keyword_google']) && !empty($_GET['keyword_google'])) || isset
     
     $berhasil = 0;
     $dilewati = 0;
-    $total_target = 100; // Target ambil 100 buku
-    $max_per_page = 40;  // Limit Google per request
+    $total_target = 100; 
+    $max_per_page = 40;  
 
-    // LOOPING API (Pagination)
     for ($startIndex = 0; $startIndex < $total_target; $startIndex += $max_per_page) {
         
         $api_url = "https://www.googleapis.com/books/v1/volumes?q=$encoded_key&maxResults=$max_per_page&startIndex=$startIndex&langRestrict=id";
@@ -68,13 +57,11 @@ if ((isset($_GET['keyword_google']) && !empty($_GET['keyword_google'])) || isset
                 foreach ($json['items'] as $item) {
                     $info = $item['volumeInfo'];
                     
-                    // Ambil Data
                     $judul    = $info['title'] ?? 'Tanpa Judul';
                     $penulis  = isset($info['authors']) ? implode(', ', $info['authors']) : 'Unknown';
                     $tahun    = isset($info['publishedDate']) ? substr($info['publishedDate'], 0, 4) : date('Y');
                     $sinopsis = isset($info['description']) ? substr($info['description'], 0, 500).'...' : '-';
                     
-                    // Kategori Pintar
                     $kategori_api = isset($info['categories']) ? $info['categories'][0] : 'Umum';
                     if (stripos($kategori_api, 'Computer') !== false || stripos($kategori_api, 'Technology') !== false) $kategori = 'IT & Komputer';
                     elseif (stripos($kategori_api, 'Fiction') !== false) $kategori = 'Novel';
@@ -84,12 +71,10 @@ if ((isset($_GET['keyword_google']) && !empty($_GET['keyword_google'])) || isset
 
                     $stok = 5; 
 
-                    // Cek Duplikat
                     $stmt_cek = $pdo->prepare("SELECT id FROM buku WHERE judul = ?");
                     $stmt_cek->execute([$judul]);
                     
                     if ($stmt_cek->rowCount() == 0) {
-                        // Download Cover
                         $cover_final = 'default.jpg';
                         if (isset($info['imageLinks']['thumbnail'])) {
                             $url_img = str_replace('http://', 'https://', $info['imageLinks']['thumbnail']);
@@ -103,7 +88,6 @@ if ((isset($_GET['keyword_google']) && !empty($_GET['keyword_google'])) || isset
                             }
                         }
 
-                        // Insert DB
                         try {
                             $stmt = $pdo->prepare("INSERT INTO buku (judul, penulis, tahun_terbit, kategori, stok, cover, sinopsis) VALUES (?, ?, ?, ?, ?, ?, ?)");
                             $stmt->execute([$judul, $penulis, $tahun, $kategori, $stok, $cover_final, $sinopsis]);
@@ -132,7 +116,6 @@ if ((isset($_GET['keyword_google']) && !empty($_GET['keyword_google'])) || isset
     </div>";
 }
 
-// --- 3. HITUNG DATA HARI INI ---
 try {
     $stmt_today = $pdo->query("SELECT COUNT(*) FROM buku WHERE DATE(created_at) = CURDATE()");
     $count_today = $stmt_today->fetchColumn();
@@ -140,7 +123,6 @@ try {
     $count_today = 0;
 }
 
-// --- 4. FILTER TAMPILAN ---
 $filter_mode = isset($_GET['filter']) ? $_GET['filter'] : 'all';
 
 if ($filter_mode == 'today') {
@@ -168,7 +150,6 @@ $buku_lokal = $stmt->fetchAll();
 </head>
 <body class="bg-light container mt-4 mb-5 fade-in">
     
-    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm border">
         <div>
             <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h4>
@@ -181,7 +162,6 @@ $buku_lokal = $stmt->fetchAll();
         </div>
     </div>
 
-    <!-- STATISTIK HARI INI -->
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card border-0 shadow-sm bg-gradient-success text-white overflow-hidden">
@@ -205,7 +185,6 @@ $buku_lokal = $stmt->fetchAll();
         </div>
     </div>
 
-    <!-- IMPORT OTOMATIS (SEARCH & RANDOM) -->
     <div class="card border-0 shadow-sm mb-5 overflow-hidden">
         <div class="card-header bg-gradient-primary border-0 py-3">
             <h5 class="mb-0 text-white"><i class="bi bi-cloud-download-fill me-2"></i>Import Massal (Max 100 Buku)</h5>
@@ -214,7 +193,6 @@ $buku_lokal = $stmt->fetchAll();
             <?= $import_status ?>
             
             <form method="GET" action="" class="row g-2 mb-3 align-items-center">
-                <!-- Input Pencarian Manual -->
                 <div class="col-md-7">
                     <div class="input-group">
                         <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
@@ -222,14 +200,12 @@ $buku_lokal = $stmt->fetchAll();
                     </div>
                 </div>
                 
-                <!-- Tombol Cari Manual -->
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-dark w-100 fw-bold">
                         <i class="bi bi-download me-1"></i> Cari
                     </button>
                 </div>
 
-                <!-- TOMBOL RANDOM (FITUR BARU) -->
                 <div class="col-md-3">
                     <button type="submit" name="random_import" value="1" class="btn btn-warning text-white w-100 fw-bold shadow-sm">
                         <i class="bi bi-shuffle me-1"></i> 🎲 Random 100
@@ -244,7 +220,6 @@ $buku_lokal = $stmt->fetchAll();
         </div>
     </div>
 
-    <!-- TABEL DATA -->
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
             <h5 class="mb-0 fw-bold text-dark"><?= $judul_tabel ?></h5>

@@ -1,7 +1,6 @@
 <?php
 require '../../config/database.php';
 
-// Cek Login
 if (!isset($_SESSION['user'])) {
     header("Location: ../../index.php"); exit;
 }
@@ -11,12 +10,10 @@ $id_user = $user['id'];
 $sukses = "";
 $error = "";
 
-// --- 1. LOGIC UPDATE BIODATA ---
 if (isset($_POST['update_profil'])) {
     $nama = htmlspecialchars($_POST['nama']);
     $foto_final = $user['foto']; 
 
-    // Cek Upload Foto
     if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
         $nama_file = $_FILES['foto']['name'];
         $tmp_file  = $_FILES['foto']['tmp_name'];
@@ -49,7 +46,6 @@ if (isset($_POST['update_profil'])) {
     }
 }
 
-// --- 2. LOGIC GANTI PASSWORD ---
 if (isset($_POST['update_password'])) {
     $pass_lama  = $_POST['pass_lama'];
     $pass_baru  = $_POST['pass_baru'];
@@ -73,7 +69,6 @@ if (isset($_POST['update_password'])) {
     }
 }
 
-// --- 3. LOGIC RIWAYAT ---
 $query_pinjam = "SELECT p.*, b.judul, b.cover FROM peminjaman p JOIN buku b ON p.buku_id = b.id WHERE p.user_id = ? ORDER BY p.id DESC";
 $stmt_pinjam = $pdo->prepare($query_pinjam);
 $stmt_pinjam->execute([$id_user]);
@@ -96,16 +91,14 @@ $riwayat_buku = $stmt_pinjam->fetchAll();
         .profile-img-wrap { width: 120px; height: 120px; margin: -60px auto 10px; position: relative; }
         .profile-img { width: 100%; height: 100%; object-fit: cover; border: 4px solid white; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
         
-        /* Overlay Kamera hanya muncul saat Mode Edit Aktif */
         .camera-overlay {
             position: absolute; bottom: 0; right: 0;
             background: #fff; width: 35px; height: 35px;
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer;
-            display: none; /* Default Hidden */
+            display: none; 
         }
         
-        /* Saat mode edit aktif, class .editable ditambahkan ke body/wrapper */
         .editable .camera-overlay { display: flex; animation: fadeIn 0.3s; }
         .editable .profile-img-wrap { cursor: pointer; }
 
@@ -273,41 +266,28 @@ $riwayat_buku = $stmt_pinjam->fetchAll();
 <script src="../../assets/animate.js"></script>
 
 <script>
-    // --- FITUR MODE EDIT ---
-    
     function enableEditMode() {
-        // 1. Sembunyikan tombol "Edit Profil"
         document.getElementById('btnEnableEdit').classList.add('d-none');
         
-        // 2. Munculkan tombol "Simpan" & "Batal"
         document.getElementById('actionButtons').classList.remove('d-none');
         
-        // 3. Aktifkan Input Nama
         document.getElementById('inputNama').disabled = false;
         document.getElementById('inputNama').focus();
 
-        // 4. Aktifkan Input File Foto
         document.getElementById('fileInput').disabled = false;
 
-        // 5. Munculkan Ikon Kamera di Foto (via CSS class)
         document.getElementById('photoWrapper').classList.add('editable');
     }
 
     function cancelEditMode() {
-        // 1. Munculkan kembali tombol "Edit Profil"
         document.getElementById('btnEnableEdit').classList.remove('d-none');
         
-        // 2. Sembunyikan tombol aksi
         document.getElementById('actionButtons').classList.add('d-none');
         
-        // 3. Matikan Input Nama & Foto
         document.getElementById('inputNama').disabled = true;
         document.getElementById('fileInput').disabled = true;
         
-        // 4. Hilangkan mode edit foto
         document.getElementById('photoWrapper').classList.remove('editable');
-
-        // 5. (Opsional) Reset nilai form jika batal (reload halaman simple)
         location.reload(); 
     }
 

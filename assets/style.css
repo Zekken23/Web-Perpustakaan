@@ -16,7 +16,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Animasi Fade In */
 .fade-in {
     animation: fadeIn 0.8s ease-in-out;
 }
@@ -26,7 +25,6 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Card Styling */
 .card {
     border: none;
     border-radius: 15px;
@@ -39,7 +37,6 @@ body {
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
 
-/* Custom Button */
 .btn-custom {
     border-radius: 50px;
     padding: 10px 25px;
@@ -47,7 +44,6 @@ body {
     transition: all 0.3s;
 }
 
-/* Table Styling */
 .table thead th {
     background-color: var(--primary);
     color: white;

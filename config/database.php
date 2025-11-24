@@ -11,7 +11,6 @@ try {
     die("Koneksi Gagal: " . $e->getMessage());
 }
 
-// Memulai session secara otomatis agar tidak perlu session_start() berulang kali
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }

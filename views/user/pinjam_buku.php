@@ -1,46 +1,34 @@
 <?php
-// views/user/pinjam_buku.php
-
-// 1. Setup & Auth
-require_once __DIR__ . '/../../config/database.php'; // Pastikan path config benar
-// Jika auth.php sudah session_start, baris bawah tidak perlu. Jika belum, biarkan.
+require_once __DIR__ . '/../../config/database.php'; 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Cek Login Manual (jika auth.php belum mengcover)
 $user_id = $_SESSION['user']['id'] ?? $_SESSION['user_id'] ?? null;
 if (!$user_id) {
     header('Location: ../../index.php');
     exit;
 }
 
-// 2. Ambil ID Buku
 $book_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// 3. PROSES TOMBOL FAVORIT (Logic di satu file)
 if (isset($_POST['toggle_favorite'])) {
-    // Cek apakah sudah ada di favorit
     $checkFav = $pdo->prepare("SELECT id FROM koleksi_favorit WHERE user_id = ? AND buku_id = ?");
     $checkFav->execute([$user_id, $book_id]);
     $existingFav = $checkFav->fetch();
 
     if ($existingFav) {
-        // Jika sudah ada -> Hapus (Un-favorite)
         $del = $pdo->prepare("DELETE FROM koleksi_favorit WHERE user_id = ? AND buku_id = ?");
         $del->execute([$user_id, $book_id]);
     } else {
-        // Jika belum ada -> Tambah (Favorite)
         $ins = $pdo->prepare("INSERT INTO koleksi_favorit (user_id, buku_id) VALUES (?, ?)");
         $ins->execute([$user_id, $book_id]);
     }
 
-    // Refresh halaman agar icon berubah
     header("Location: pinjam_buku.php?id=" . $book_id);
     exit;
 }
 
-// 4. Ambil Data Buku
 $stmt = $pdo->prepare("SELECT * FROM buku WHERE id = :id LIMIT 1");
 $stmt->execute([':id' => $book_id]);
 $book = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -50,14 +38,9 @@ if (!$book) {
     exit;
 }
 
-// 5. Cek Status Favorit (Untuk UI)
 $stmtFav = $pdo->prepare("SELECT id FROM koleksi_favorit WHERE user_id = ? AND buku_id = ?");
 $stmtFav->execute([$user_id, $book_id]);
 $isFavorited = $stmtFav->fetch();
-
-// Include Header (Pastikan header memuat CSS Bootstrap & Bootstrap Icons)
-// Jika header.php kamu belum ada Bootstrap, script ini tetap jalan tapi tampilannya basic.
-// include __DIR__ . '/../../includes/header.php'; 
 ?>
 
 <!doctype html>

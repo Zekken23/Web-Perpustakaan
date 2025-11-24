@@ -1,15 +1,11 @@
 <?php
-// views/user/riwayat.php
 require '../../config/database.php';
 
-// Cek Login
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'user') {
-    // header("Location: ../../index.php"); 
 }
 
 $user_id = $_SESSION['user']['id'] ?? 1;
 
-// Query
 $query = "SELECT p.*, b.judul, b.cover 
           FROM peminjaman p 
           JOIN buku b ON p.buku_id = b.id 

@@ -1,19 +1,16 @@
 <?php
 require '../../config/database.php';
 
-// Cek Sesi Admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     header("Location: ../../index.php"); exit;
 }
 
-// Cek ID di URL
 if (!isset($_GET['id'])) {
     header("Location: admin_dashboard.php"); exit;
 }
 
 $id = $_GET['id'];
 
-// Ambil Data Lama
 $stmt = $pdo->prepare("SELECT * FROM buku WHERE id = ?");
 $stmt->execute([$id]);
 $data = $stmt->fetch();
@@ -22,33 +19,28 @@ if (!$data) {
     echo "Data buku tidak ditemukan!"; exit;
 }
 
-// PROSES UPDATE DATA
 if (isset($_POST['update'])) {
     $judul = htmlspecialchars($_POST['judul']);
     $penulis = htmlspecialchars($_POST['penulis']);
     $tahun = $_POST['tahun'];
     $kategori = $_POST['kategori'];
     $stok = $_POST['stok'];
-    $sinopsis = htmlspecialchars($_POST['sinopsis']); // Tambahan Sinopsis
+    $sinopsis = htmlspecialchars($_POST['sinopsis']); 
     
-    $cover = $data['cover']; // Default pakai cover lama
+    $cover = $data['cover']; 
 
-    // Logika Ganti Gambar
     if (isset($_FILES['cover']['name']) && $_FILES['cover']['name'] != "") {
         $nama_file = $_FILES['cover']['name'];
         $tmp_file = $_FILES['cover']['tmp_name'];
         $ext = pathinfo($nama_file, PATHINFO_EXTENSION);
         
-        // Validasi format
         if (in_array(strtolower($ext), ['jpg', 'jpeg', 'png'])) {
-            // Nama unik: timestamp_namafile
             $cover_baru = date('dmYHis') . '_' . rand(100,999) . '.' . $ext;
             $path = "../../assets/foto/" . $cover_baru;
             
             if (move_uploaded_file($tmp_file, $path)) {
-                $cover = $cover_baru; // Update variabel cover
+                $cover = $cover_baru; 
                 
-                // (Opsional) Hapus file lama jika bukan default
                 if ($data['cover'] != 'default.jpg' && file_exists("../../assets/foto/" . $data['cover'])) {
                     unlink("../../assets/foto/" . $data['cover']);
                 }
@@ -57,7 +49,6 @@ if (isset($_POST['update'])) {
     }
 
     try {
-        // Query Update Lengkap (termasuk Sinopsis)
         $sql = "UPDATE buku SET judul=?, penulis=?, tahun_terbit=?, kategori=?, stok=?, sinopsis=?, cover=? WHERE id=?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$judul, $penulis, $tahun, $kategori, $stok, $sinopsis, $cover, $id]);
@@ -162,7 +153,6 @@ if (isset($_POST['update'])) {
 
 <script src="../../assets/animate.js"></script>
 <script>
-    // Script Sederhana untuk Preview Nama File saat dipilih
     function previewImage(event) {
         const input = event.target;
         const label = document.getElementById('namaFile');

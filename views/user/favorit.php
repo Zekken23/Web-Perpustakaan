@@ -1,15 +1,12 @@
 <?php
-// 1. Path Config: Mundur 2 langkah
 require '../../config/database.php';
 
-// 2. Cek Login User
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'user') {
     header("Location: ../../index.php"); exit;
 }
 
 $user_id = $_SESSION['user']['id'];
 
-// --- LOGIC HAPUS DARI FAVORIT ---
 if (isset($_POST['hapus'])) {
     $id_fav = $_POST['id_fav'];
     $stmt = $pdo->prepare("DELETE FROM favorit WHERE id = ? AND user_id = ?");
@@ -18,20 +15,16 @@ if (isset($_POST['hapus'])) {
     echo "<script>alert('Buku dihapus dari koleksi favorit!'); window.location='favorit.php';</script>";
 }
 
-// --- LOGIC PINJAM DARI HALAMAN FAVORIT ---
 if (isset($_POST['pinjam'])) {
     $buku_id = $_POST['buku_id'];
     $tgl_skrg = date('Y-m-d');
 
-    // Cek Stok
     $cek = $pdo->prepare("SELECT stok FROM buku WHERE id = ?");
     $cek->execute([$buku_id]);
     $stok_buku = $cek->fetchColumn();
 
     if ($stok_buku > 0) {
-        // Kurangi Stok
         $pdo->prepare("UPDATE buku SET stok = stok - 1 WHERE id = ?")->execute([$buku_id]);
-        // Insert Peminjaman
         $stmt = $pdo->prepare("INSERT INTO peminjaman (user_id, buku_id, tanggal_pinjam, status) VALUES (?, ?, ?, 'pending')");
         $stmt->execute([$user_id, $buku_id, $tgl_skrg]);
         
@@ -41,7 +34,6 @@ if (isset($_POST['pinjam'])) {
     }
 }
 
-// --- AMBIL DATA FAVORIT (JOIN dengan tabel Buku) ---
 $query = "SELECT f.id as id_fav, b.* FROM favorit f 
           JOIN buku b ON f.buku_id = b.id 
           WHERE f.user_id = ? 

@@ -1,28 +1,22 @@
 <?php
-// 1. Path Config: Mundur 2 langkah
 require '../../config/database.php';
 
-// 2. Cek Akses Admin (Keamanan)
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     header("Location: ../../index.php"); exit;
 }
 
-// Logic: Ubah Status (ACC Peminjaman / Pengembalian)
 if (isset($_GET['aksi']) && isset($_GET['id'])) {
     $id = $_GET['id'];
     $aksi = $_GET['aksi'];
 
     try {
         if ($aksi == 'acc') {
-            // Ubah status jadi 'dipinjam'
             $pdo->prepare("UPDATE peminjaman SET status='dipinjam' WHERE id=?")->execute([$id]);
             $msg = "Peminjaman berhasil disetujui!";
         } 
         elseif ($aksi == 'kembali') {
-            // Ubah status jadi 'kembali' DAN update stok
             $pdo->prepare("UPDATE peminjaman SET status='kembali', tanggal_kembali=NOW() WHERE id=?")->execute([$id]);
             
-            // Ambil ID Buku dari transaksi ini untuk kembalikan stok
             $stmt = $pdo->prepare("SELECT buku_id FROM peminjaman WHERE id=?");
             $stmt->execute([$id]);
             $trx = $stmt->fetch();
@@ -33,7 +27,6 @@ if (isset($_GET['aksi']) && isset($_GET['id'])) {
             $msg = "Buku telah dikembalikan dan stok diperbarui!";
         }
         
-        // Redirect agar URL bersih kembali
         echo "<script>alert('$msg'); window.location='admin_pinjam.php';</script>";
         
     } catch (PDOException $e) {
@@ -41,12 +34,11 @@ if (isset($_GET['aksi']) && isset($_GET['id'])) {
     }
 }
 
-// Ambil Data Peminjaman (Join 3 Tabel: Peminjaman, User, Buku)
 $query = "SELECT p.*, u.nama as nama_peminjam, b.judul, b.cover 
           FROM peminjaman p 
           JOIN users u ON p.user_id = u.id 
           JOIN buku b ON p.buku_id = b.id 
-          ORDER BY p.id DESC"; // Urutkan dari yang terbaru
+          ORDER BY p.id DESC"; 
 $data = $pdo->query($query)->fetchAll();
 ?>
 

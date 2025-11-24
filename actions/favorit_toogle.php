@@ -1,15 +1,12 @@
 <?php
-// actions/favorit_toggle.php
-// Toggle Favorit (add / remove)
 
 session_start();
 if (empty($_SESSION['user_id'])) {
-    // belum login -> redirect ke login/landing
     header('Location: /index.php');
     exit;
 }
 
-require_once __DIR__ . '/../config/database.php'; // pastikan menyediakan $pdo
+require_once __DIR__ . '/../config/database.php'; 
 
 function set_flash($key, $msg) {
     $_SESSION['flash'][$key] = $msg;
@@ -32,7 +29,6 @@ try {
         exit;
     }
 
-    // Optional: pastikan buku ada
     $stmt = $pdo->prepare("SELECT id FROM buku WHERE id = :id LIMIT 1");
     $stmt->execute([':id' => $buku_id]);
     if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -41,18 +37,15 @@ try {
         exit;
     }
 
-    // cek favorit existing
     $q = $pdo->prepare("SELECT id FROM favorit WHERE user_id = :user_id AND buku_id = :buku_id LIMIT 1");
     $q->execute([':user_id' => $user_id, ':buku_id' => $buku_id]);
     $exists = $q->fetch(PDO::FETCH_ASSOC);
 
     if ($exists) {
-        // hapus favorit
         $del = $pdo->prepare("DELETE FROM favorit WHERE id = :id");
         $del->execute([':id' => $exists['id']]);
         set_flash('success', 'Buku dihapus dari Favorit.');
     } else {
-        // tambah favorit
         $ins = $pdo->prepare("INSERT INTO favorit (user_id, buku_id) VALUES (:user_id, :buku_id)");
         $ins->execute([':user_id' => $user_id, ':buku_id' => $buku_id]);
         set_flash('success', 'Buku disimpan ke Favorit.');

@@ -1,19 +1,15 @@
 <?php
-// Panggil koneksi database
 require 'config/database.php';
 
 echo "<h3>Memulai Perbaikan Akun Admin...</h3>";
 
 try {
-    // 1. HAPUS Admin Lama (biar tidak duplikat/bentrok)
     $stmt_hapus = $pdo->prepare("DELETE FROM users WHERE email = 'admin@perpus.com'");
     $stmt_hapus->execute();
     echo "✅ Akun admin lama dihapus (jika ada).<br>";
 
-    // 2. BUAT Admin Baru
     $email = 'admin@perpus.com';
     $password_plain = 'admin123';
-    // Kita gunakan PASSWORD_DEFAULT agar PHP memilih algoritma terbaik yang didukung servermu
     $password_hash = password_hash($password_plain, PASSWORD_DEFAULT);
     $nama = 'Super Admin';
     $role = 'admin';

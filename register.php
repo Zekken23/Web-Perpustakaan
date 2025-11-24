@@ -12,7 +12,6 @@ if (isset($_POST['register'])) {
         $stmt->execute([$nama, $email, $password, $role]);
         echo "<script>alert('Pendaftaran Berhasil! Silakan Login'); window.location='index.php';</script>";
     } catch (PDOException $e) {
-        // Cek jika errornya karena duplikat email
         if ($e->errorInfo[1] == 1062) {
             $error = "Email sudah terdaftar! Gunakan email lain.";
         } else {

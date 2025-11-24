@@ -1,19 +1,14 @@
 <?php
-// File: views/user/jelajahi.php
 require '../../config/database.php';
 
-// 1. Cek Sesi
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'user') {
-    // header("Location: ../../index.php"); exit; 
 }
 
 $user_id = $_SESSION['user']['id'] ?? 1;
 
-// 2. Logika Filter & Pencarian
 $keyword = isset($_GET['q']) ? $_GET['q'] : '';
 $kategori = isset($_GET['kategori']) ? $_GET['kategori'] : '';
 
-// Query dinamis berdasarkan filter
 $sql = "SELECT * FROM buku WHERE (judul LIKE ? OR penulis LIKE ?)";
 $params = ["%$keyword%", "%$keyword%"];
 
@@ -22,16 +17,14 @@ if (!empty($kategori)) {
     $params[] = $kategori;
 }
 
-$sql .= " ORDER BY id DESC"; // Tampilkan buku terbaru di atas
+$sql .= " ORDER BY id DESC"; 
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $semua_buku = $stmt->fetchAll();
 
-// Dummy data jika database kosong (agar tampilan tidak rusak saat preview)
 if(!$semua_buku) $semua_buku = []; 
 
-// Daftar Kategori (Bisa diambil dari DB, tapi ini hardcode untuk UI dulu)
 $list_kategori = ['Semua', 'Fiksi', 'Sains', 'Sejarah', 'Teknologi', 'Bisnis', 'Biografi', 'Komik'];
 ?>
 
@@ -47,7 +40,6 @@ $list_kategori = ['Semua', 'Fiksi', 'Sains', 'Sejarah', 'Teknologi', 'Bisnis', '
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* --- Menggunakan Style yang SAMA dengan Dashboard --- */
     :root {
         --sidebar-width: 250px;
         --header-height: 64px;
@@ -63,7 +55,6 @@ $list_kategori = ['Semua', 'Fiksi', 'Sains', 'Sejarah', 'Teknologi', 'Bisnis', '
         overflow-x: hidden;
     }
 
-    /* HEADER & SIDEBAR (Sama persis) */
     .navbar-custom {
         height: var(--header-height);
         background: white;
@@ -107,7 +98,6 @@ $list_kategori = ['Semua', 'Fiksi', 'Sains', 'Sejarah', 'Teknologi', 'Bisnis', '
         min-height: calc(100vh - var(--header-height));
     }
 
-    /* Search Box */
     .search-box { max-width: 480px; width: 100%; }
     .form-control-search {
         background-color: #f1f3f5; border: none; padding: 0.6rem 1rem;
@@ -116,10 +106,9 @@ $list_kategori = ['Semua', 'Fiksi', 'Sains', 'Sejarah', 'Teknologi', 'Bisnis', '
         background-color: white; box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
     }
 
-    /* CARD BUKU (Sama persis) */
     .grid-books {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Sedikit lebih lebar di jelajahi */
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
         gap: 2rem;
     }
 
@@ -139,10 +128,9 @@ $list_kategori = ['Semua', 'Fiksi', 'Sains', 'Sejarah', 'Teknologi', 'Bisnis', '
     }
     .book-info small { font-size: 0.85rem; color: #868e96; }
 
-    /* TAMBAHAN KHUSUS HALAMAN JELAJAHI: Category Chips */
     .category-scroll {
         display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;
-        scrollbar-width: none; /* Firefox */
+        scrollbar-width: none; 
     }
     .category-scroll::-webkit-scrollbar { display: none; }
     

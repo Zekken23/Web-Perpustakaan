@@ -260,7 +260,7 @@ $friends = $friendsStmt->fetchAll();
                 <section class="mb-5">
                     <div class="section-title">
                         <span>Baru Ditambahkan</span>
-                        <a href="#" class="text-decoration-none fs-6 fw-semibold">Lihat Semua</a>
+                        <a href="jelajahi.php" class="text-decoration-none fs-6 fw-semibold">Lihat Semua</a>
                     </div>
                    <div class="d-flex gap-3 overflow-auto pb-3" style="scrollbar-width: thin;">
                    <?php foreach($recently as $b): ?>

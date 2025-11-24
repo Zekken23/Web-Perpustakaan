@@ -1,14 +1,11 @@
 <?php
 require '../../config/database.php';
 
-// Cek Login
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'user') {
-    // header("Location: ../../index.php"); // Uncomment jika perlu
 }
 
 $user_id = $_SESSION['user']['id'] ?? 1;
 
-// Query: Ambil buku yang ada di tabel koleksi_favorit milik user ini
 $sql = "SELECT buku.* FROM buku 
         JOIN koleksi_favorit ON buku.id = koleksi_favorit.buku_id 
         WHERE koleksi_favorit.user_id = ? 
@@ -30,7 +27,6 @@ $bookmarks = $stmt->fetchAll();
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
-    /* Menggunakan style yang sama dengan dashboard agar konsisten */
     :root { --sidebar-width: 250px; --header-height: 64px; --bg-color: #f8f9fa; }
     body { background-color: var(--bg-color); font-family: 'Inter', sans-serif; }
     
