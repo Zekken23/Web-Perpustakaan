@@ -1,8 +1,6 @@
 <?php
-// 1. PERBAIKAN PATH: Mundur 2 folder untuk akses config
 require '../../config/database.php';
 
-// Cek sesi admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     header("Location: ../../index.php"); exit;
 }
@@ -14,17 +12,13 @@ if (isset($_POST['simpan'])) {
     $kategori = $_POST['kategori'];
     $stok = $_POST['stok'];
     
-    // 2. PERBAIKAN UPLOAD:
-    // Cek apakah ada file yang diupload?
-    $cover = "default.jpg"; // Gambar default jika tidak upload
+    $cover = "default.jpg"; 
     if (isset($_FILES['cover']['name']) && $_FILES['cover']['name'] != "") {
         $nama_file = $_FILES['cover']['name'];
         $tmp_file = $_FILES['cover']['tmp_name'];
         
-        // Buat nama unik agar tidak bentrok
         $cover_baru = date('dmYHis') . '_' . $nama_file;
         
-        // Path tujuan: Mundur 2 folder -> assets -> foto
         $path = "../../assets/foto/" . $cover_baru;
         
         if (move_uploaded_file($tmp_file, $path)) {
