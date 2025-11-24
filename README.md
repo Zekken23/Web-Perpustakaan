@@ -44,23 +44,13 @@ Struktur di repository (contoh dari project):
 
 ```
 /actions
-  buku_create.php
-  buku_delete.php
-  buku_update.php
   favorit_toogle.php
-  login_process.php
-  register_process.php
 /assets
   foto/
   animate.js
   style.css
 /config
   database.php
-/includes
-  auth.php
-  footer.php
-  functions.php
-  header.php
 /views
   /admin
     admin_dashboard.php
