@@ -55,13 +55,17 @@ Struktur di repository (contoh dari project):
     admin_edit.php
     admin_pinjam.php
     admin_tambah.php
-    kelola_buku.php
   /user
+    bookmark.php
     favorit.php
+    jelajahi.php
+    proses_kembali.php
+    proses_pinjam.php
     pinjam_buku.php
     profile.php
     riwayat.php
     user_dashboard.php
+create_ronny.php
 index.php
 register.php
 login.php
@@ -81,7 +85,7 @@ git clone <repo-url>
 cd nama-repo
 ```
 
-2. Buat database MySQL dan import struktur tabel (contoh SQL sederhana):
+2. Buat database MySQL dan import struktur tabel:
 
 ```sql
 -- tabel users
@@ -148,13 +152,5 @@ CREATE TABLE favorit (
 * `views/admin/admin_pinjam.php` berfungsi menampilkan daftar permintaan pinjaman untuk di-approve.
 * Fitur favorit dapat di-toggle melalui `favorit_toogle.php`.
 * Riwayat pengguna tersimpan di `views/user/riwayat.php` dengan mengambil record dari tabel `pinjaman`.
-
----
-
-## Pengembangan & Kontribusi
-
-* Gunakan branch baru untuk fitur besar.
-* Buat issue untuk bug atau permintaan fitur.
-* Pull request harus disertai deskripsi perubahan dan testing singkat.
 
 ---
