@@ -153,4 +153,9 @@ CREATE TABLE favorit (
 * Fitur favorit dapat di-toggle melalui `favorit_toogle.php`.
 * Riwayat pengguna tersimpan di `views/user/riwayat.php` dengan mengambil record dari tabel `pinjaman`.
 
+## Kontributor
+* Muhammad Yusron Al Ghoni Rizqullah (202310370311333)
+* Angga Surya Tri Putra (202310370311305)
+* M.Deanova Wishal Andika (202310370311384)
+
 ---
