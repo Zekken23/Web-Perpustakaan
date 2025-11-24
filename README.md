@@ -1,7 +1,5 @@
 # SIM Perpustakaan
 
-![Struktur Project](/mnt/data/e27619ad-b883-4628-b928-1393734b5b11.png)
-
 Sistem Informasi Manajemen (SIM) Perpustakaan berbasis PHP sederhana dengan dua peran: **admin** dan **user**. Sistem ini menyediakan fitur manajemen buku (CRUD), autentikasi, proses peminjaman yang harus disetujui admin, fitur favorit, riwayat peminjaman/membaca, dan pengembalian buku.
 
 ---
@@ -160,11 +158,3 @@ CREATE TABLE favorit (
 * Pull request harus disertai deskripsi perubahan dan testing singkat.
 
 ---
-
-## Lisensi
-
-Silakan tambahkan lisensi yang sesuai (mis. MIT) di file `LICENSE` jika ingin membuka kode untuk publik.
-
----
-
-Jika Anda ingin, saya bisa membantu membuat `README.md` versi bahasa Inggris, menambahkan contoh endpoint, atau menulis skrip SQL lengkap untuk schema dan seed data.
