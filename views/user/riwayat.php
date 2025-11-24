@@ -1,19 +1,20 @@
 <?php
-// 1. Path Config: Mundur 2 langkah
+// views/user/riwayat.php
 require '../../config/database.php';
 
-// 2. Cek Login User
+// Cek Login
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'user') {
-    header("Location: ../../index.php"); exit;
+    // header("Location: ../../index.php"); 
 }
 
-$user_id = $_SESSION['user']['id'];
+$user_id = $_SESSION['user']['id'] ?? 1;
 
+// Query
 $query = "SELECT p.*, b.judul, b.cover 
           FROM peminjaman p 
           JOIN buku b ON p.buku_id = b.id 
           WHERE p.user_id = ? 
-          ORDER BY p.id DESC"; // Urutkan dari yang paling baru
+          ORDER BY p.id DESC"; 
 $stmt = $pdo->prepare($query);
 $stmt->execute([$user_id]);
 $riwayat = $stmt->fetchAll();
@@ -25,11 +26,16 @@ $riwayat = $stmt->fetchAll();
     <title>Riwayat Peminjaman</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="../../assets/style.css">
+    
+    <style>
+        body { background-color: #f8f9fa; font-family: sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    </style>
 </head>
 <body class="bg-light fade-in">
 
-<div class="container mt-5 mb-5" style="max-width: 900px;">
+<div class="container mt-5 mb-5" style="max-width: 950px;">
     
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -37,7 +43,7 @@ $riwayat = $stmt->fetchAll();
             <p class="text-muted small mb-0">Daftar buku yang pernah atau sedang kamu pinjam</p>
         </div>
         <a href="user_dashboard.php" class="btn btn-secondary rounded-pill px-4">
-            &larr; Kembali ke Dashboard
+            &larr; Kembali Dashboard
         </a>
     </div>
 
@@ -54,6 +60,7 @@ $riwayat = $stmt->fetchAll();
                             <th>Tgl Pinjam</th>
                             <th>Tgl Kembali</th>
                             <th>Status</th>
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -69,28 +76,41 @@ $riwayat = $stmt->fetchAll();
                                 </div>
                             </td>
                             <td>
-                                <i class="bi bi-calendar-event text-muted"></i> 
-                                <?= date('d M Y', strtotime($row['tanggal_pinjam'])) ?>
+                                <div class="text-muted small"><i class="bi bi-calendar"></i> <?= date('d M Y', strtotime($row['tanggal_pinjam'])) ?></div>
                             </td>
                             <td>
                                 <?php if($row['tanggal_kembali']): ?>
-                                    <i class="bi bi-check-circle text-success"></i> 
-                                    <?= date('d M Y', strtotime($row['tanggal_kembali'])) ?>
+                                    <div class="text-success small fw-bold"><i class="bi bi-check-all"></i> <?= date('d M Y', strtotime($row['tanggal_kembali'])) ?></div>
                                 <?php else: ?>
-                                    <span class="text-muted">-</span>
+                                    <span class="text-muted small">-</span>
                                 <?php endif; ?>
                             </td>
                             <td>
                                 <?php 
                                     if ($row['status'] == 'pending') {
-                                        echo '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Menunggu Konfirmasi</span>';
+                                        echo '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Menunggu</span>';
                                     } elseif ($row['status'] == 'dipinjam') {
-                                        echo '<span class="badge bg-success"><i class="bi bi-book"></i> Sedang Dipinjam</span>';
+                                        echo '<span class="badge bg-primary"><i class="bi bi-book-half"></i> Dipinjam</span>';
                                     } elseif ($row['status'] == 'kembali') {
-                                        echo '<span class="badge bg-secondary"><i class="bi bi-archive"></i> Sudah Dikembalikan</span>';
+                                        echo '<span class="badge bg-secondary"><i class="bi bi-archive"></i> Selesai</span>';
                                     }
                                 ?>
                             </td>
+                            
+                            <td class="text-center">
+                                <?php if ($row['status'] == 'dipinjam'): ?>
+                                    <a href="proses_kembali.php?id=<?= $row['id'] ?>&buku_id=<?= $row['buku_id'] ?>" 
+                                       class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                                       onclick="return confirm('Yakin ingin mengembalikan buku ini sekarang?')">
+                                        <i class="bi bi-arrow-return-left"></i> Kembalikan
+                                    </a>
+                                <?php elseif ($row['status'] == 'pending'): ?>
+                                    <span class="text-muted small fst-italic">Menunggu Admin</span>
+                                <?php else: ?>
+                                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <?php endif; ?>
+                            </td>
+
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -99,9 +119,8 @@ $riwayat = $stmt->fetchAll();
             <?php else: ?>
                 <div class="text-center py-5">
                     <h1 class="text-muted display-4"><i class="bi bi-journal-x"></i></h1>
-                    <h5 class="text-muted">Belum ada riwayat peminjaman.</h5>
-                    <p class="text-secondary small">Ayo pinjam buku pertamamu sekarang!</p>
-                    <a href="user_dashboard.php" class="btn btn-primary rounded-pill mt-2">Cari Buku</a>
+                    <h5 class="text-muted">Belum ada riwayat.</h5>
+                    <a href="jelajahi.php" class="btn btn-primary rounded-pill mt-2">Cari Buku</a>
                 </div>
             <?php endif; ?>
 
@@ -109,6 +128,6 @@ $riwayat = $stmt->fetchAll();
     </div>
 </div>
 
-<script src="../../assets/animate.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

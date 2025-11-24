@@ -165,7 +165,7 @@ $friends = $friendsStmt->fetchAll();
         line-height: 1.4;
         margin-bottom: 2px;
         display: -webkit-box;
-        -webkit-line-clamp: 2; /* Batasi 2 baris judul */
+        -webkit-line-clamp: 2; 
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
@@ -230,15 +230,13 @@ $friends = $friendsStmt->fetchAll();
       <small class="text-uppercase text-muted fw-bold ps-3 mb-2" style="font-size: 0.7rem; letter-spacing: 1px;">Menu Utama</small>
       <nav class="nav flex-column mb-4">
           <a href="#" class="nav-link active"><i class="bi bi-grid"></i> Dashboard</a>
-          <a href="#" class="nav-link"><i class="bi bi-compass"></i> Jelajahi</a>
-          <a href="#" class="nav-link"><i class="bi bi-bookmark"></i> Bookmark</a>
+          <a href="jelajahi.php" class="nav-link"><i class="bi bi-compass"></i> Jelajahi</a>
+          <a href="bookmark.php" class="nav-link"><i class="bi bi-bookmark"></i> Bookmark</a>
       </nav>
 
       <small class="text-uppercase text-muted fw-bold ps-3 mb-2" style="font-size: 0.7rem; letter-spacing: 1px;">Pribadi</small>
       <nav class="nav flex-column mb-4">
           <a href="riwayat.php" class="nav-link"><i class="bi bi-clock-history"></i> Riwayat Baca</a>
-          <a href="favorit.php" class="nav-link"><i class="bi bi-heart"></i> Koleksi Favorit</a>
-          <a href="#" class="nav-link"><i class="bi bi-gear"></i> Pengaturan</a>
       </nav>
 
       <div class="mt-auto p-3 bg-primary bg-opacity-10 rounded-3 mx-2">
